@@ -9,9 +9,9 @@ load_dotenv()
 
 MODEL = "gemini-3.6-flash"
 
-client = genai.Client(
-    api_key=os.environ["GEMINI_API_KEY"]
-)
+api_key_env = os.environ.get("GEMINI_API_KEY", "")
+client = genai.Client(api_key=api_key_env) if api_key_env else None
+
 
 
 def run_agent_with_trace(user_message: str, custom_api_key: str = None) -> dict:

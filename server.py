@@ -46,6 +46,7 @@ class RegisterToolRequest(BaseModel):
     params: List[str]  # e.g., ["a", "b"] or ["n"]
 
 
+@app.get("/healthz")
 @app.get("/api/health")
 def health_check():
     api_key_set = bool(os.environ.get("GEMINI_API_KEY"))
@@ -55,6 +56,7 @@ def health_check():
         "api_key_configured": api_key_set,
         "available_tools_count": len(AVAILABLE_FUNCTIONS),
     }
+
 
 
 @app.get("/api/tools")

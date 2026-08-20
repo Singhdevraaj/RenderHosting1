@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Tool-Calling Agent Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+  <!-- Marked.js for markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Gemini Tool Agent</h1>
+          <span class="badge model-badge"><i class="fa-solid fa-brain"></i> Gemini 3.6 Flash</span>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill" title="API Status">
+          <span class="status-indicator online" id="apiStatusDot"></span>
+          <span id="apiStatusText">Connected</span>
+        </div>
+        <div class="stat-pill">
+          <i class="fa-solid fa-wrench accent-cyan"></i>
+          <span id="registeredToolsCount">9</span> Active Tools
+        </div>
+        <div class="stat-pill">
+          <i class="fa-solid fa-network-wired accent-violet"></i>
+          <span id="totalCallsCount">0</span> Tool Executions
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" id="clearChatBtn" title="Clear Chat History">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button class="icon-btn" id="flowModalBtn" title="View Tool Architecture Flow">
+          <i class="fa-solid fa-diagram-project"></i>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="API Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area: Grid Split -->
+    <main class="main-layout">
+      
+      <!-- Left Column: Chat Hub & Tool Execution Feed -->
+      <section class="chat-section">
+        <!-- Welcome Hero (Hidden once chat starts) -->
+        <div class="welcome-hero" id="welcomeHero">
+          <div class="hero-icon">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+          <h2>Gemini Function Calling Agent</h2>
+          <p>Ask a question or request a calculation. Gemini automatically selects Python tools from the local registry, executes them, and returns the verified result!</p>
+          
+          <div class="preset-chips">
+            <span class="chip-label"><i class="fa-solid fa-wand-magic-sparkles"></i> Try a sample prompt:</span>
+            <div class="chips-wrapper">
+              <button class="chip-btn" data-prompt="What is 15 multiplied by 8?">
+                <i class="fa-solid fa-calculator"></i> 15 multiplied by 8
+              </button>
+              <button class="chip-btn" data-prompt="Calculate 20 + 30 and then square the result">
+                <i class="fa-solid fa-layer-group"></i> 20 + 30 then square
+              </button>
+              <button class="chip-btn" data-prompt="What is 5 raised to the power of 4?">
+                <i class="fa-solid fa-square-root-variable"></i> 5 to power of 4
+              </button>
+              <button class="chip-btn" data-prompt="What percentage is 45 of 200?">
+                <i class="fa-solid fa-percent"></i> 45 of 200 percentage
+              </button>
+              <button class="chip-btn" data-prompt="Divide 100 by 4 and then find remainder of 25 divided by 7">
+                <i class="fa-solid fa-divide"></i> Divide & modulus chain
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Messages Feed -->
+        <div class="messages-container" id="messagesContainer">
+          <!-- Chat messages dynamically rendered here -->
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="chat-input-wrapper">
+          <form id="chatForm" class="chat-input-form">
+            <div class="input-container">
+              <textarea 
+                id="userInput" 
+                placeholder="Ask Gemini to perform calculations or use registered Python tools..." 
+                rows="1"
+                required
+              ></textarea>
+              <button type="submit" id="sendBtn" class="send-btn" title="Send message (Enter)">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+            <div class="input-footer">
+              <span class="hint-text"><i class="fa-solid fa-keyboard"></i> Press <b>Enter</b> to send, <b>Shift+Enter</b> for new line</span>
+              <span class="tool-active-hint"><i class="fa-solid fa-gears"></i> Function Calling Enabled</span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Right Column: Tools Registry & Playground Sidebar -->
+      <aside class="sidebar-section">
+        <div class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-tools">
+            <i class="fa-solid fa-cubes"></i> Tool Registry
+          </button>
+          <button class="tab-btn" data-tab="tab-playground">
+            <i class="fa-solid fa-vial"></i> Tester
+          </button>
+          <button class="tab-btn" data-tab="tab-builder">
+            <i class="fa-solid fa-plus-circle"></i> Add Tool
+          </button>
+        </div>
+
+        <div class="tab-content-wrapper">
+          <!-- Tab 1: Tool Registry List -->
+          <div class="tab-content active" id="tab-tools">
+            <div class="tools-header">
+              <h3>Registered Python Tools</h3>
+              <span class="tool-count-badge" id="sidebarToolCount">9 Tools</span>
+            </div>
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="toolSearchInput" placeholder="Filter tools by name or description...">
+            </div>
+            <div class="tools-grid" id="toolsGrid">
+              <!-- Tool cards loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- Tab 2: Interactive Tool Playground Tester -->
+          <div class="tab-content" id="tab-playground">
+            <div class="tools-header">
+              <h3>Tool Playground</h3>
+              <p class="subtitle">Directly test any Python function without calling the LLM</p>
+            </div>
+
+            <div class="playground-form-container">
+              <div class="form-group">
+                <label for="playgroundToolSelect"><i class="fa-solid fa-wrench"></i> Select Tool:</label>
+                <select id="playgroundToolSelect" class="form-control">
+                  <!-- Tool options loaded dynamically -->
+                </select>
+              </div>
+
+              <div id="playgroundParamsContainer" class="params-inputs-group">
+                <!-- Inputs generated dynamically based on function parameters -->
+              </div>
+
+              <button id="runPlaygroundBtn" class="primary-btn block-btn">
+                <i class="fa-solid fa-play"></i> Execute Function Directly
+              </button>
+
+              <div class="playground-result-card hidden" id="playgroundResultCard">
+                <div class="result-header">
+                  <span>Execution Output</span>
+                  <span class="result-time" id="playgroundTime">0.5ms</span>
+                </div>
+                <pre class="json-code" id="playgroundResultCode"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Custom Tool Creator -->
+          <div class="tab-content" id="tab-builder">
+            <div class="tools-header">
+              <h3>Register New Tool</h3>
+              <p class="subtitle">Dynamically define a Python function formula for Gemini to use</p>
+            </div>
+
+            <form id="addToolForm" class="add-tool-form">
+              <div class="form-group">
+                <label for="newToolName">Function Name:</label>
+                <input type="text" id="newToolName" placeholder="e.g. hypotenuse" required pattern="[a-zA-Z0-9_]+" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="newToolDesc">Description for Gemini:</label>
+                <input type="text" id="newToolDesc" placeholder="e.g. Calculate square root of sum of squares" required class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="newToolParams">Parameters (comma-separated):</label>
+                <input type="text" id="newToolParams" placeholder="e.g. a, b" required class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="newToolFormula">Python Formula Expression:</label>
+                <input type="text" id="newToolFormula" placeholder="e.g. (a**2 + b**2) ** 0.5" required class="form-control">
+              </div>
+
+              <button type="submit" class="primary-btn block-btn">
+                <i class="fa-solid fa-floppy-disk"></i> Register Function
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Modal: Tool Calling Flow Diagram -->
+  <div class="modal-overlay" id="flowModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-diagram-project accent-cyan"></i> Gemini Tool-Calling Execution Architecture</h2>
+        <button class="modal-close" id="closeFlowModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="architecture-diagram">
+          <div class="arch-step step-user">
+            <div class="step-badge">1</div>
+            <div class="step-icon"><i class="fa-solid fa-user"></i></div>
+            <h4>User Prompt</h4>
+            <p>"What is 15 multiplied by 8?"</p>
+          </div>
+
+          <div class="arch-arrow">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+
+          <div class="arch-step step-gemini">
+            <div class="step-badge">2</div>
+            <div class="step-icon"><i class="fa-solid fa-brain"></i></div>
+            <h4>Gemini 3.6 Flash</h4>
+            <p>Analyzes intent & sends <code>function_call</code> request for <b>product(a=15, b=8)</b></p>
+          </div>
+
+          <div class="arch-arrow">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+
+          <div class="arch-step step-python">
+            <div class="step-badge">3</div>
+            <div class="step-icon"><i class="fa-solid fa-code"></i></div>
+            <h4>Python Engine</h4>
+            <p>Executes <code>product(15, 8)</code> locally and returns <b>120</b></p>
+          </div>
+
+          <div class="arch-arrow">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+
+          <div class="arch-step step-response">
+            <div class="step-badge">4</div>
+            <div class="step-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <h4>Final Response</h4>
+            <p>Gemini receives output turn and synthesizes friendly final response!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Settings & API Key -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-gear accent-violet"></i> Agent Settings</h2>
+        <button class="modal-close" id="closeSettingsModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="customApiKeyInput">Gemini API Key (Optional override):</label>
+          <input type="password" id="customApiKeyInput" placeholder="AIzaSy... (Leave blank to use .env)" class="form-control">
+          <span class="form-hint">By default, the server uses <code>GEMINI_API_KEY</code> from the project's <code>.env</code> file.</span>
+        </div>
+
+        <div class="form-group">
+          <label>Active Model:</label>
+          <input type="text" value="gemini-3.6-flash" disabled class="form-control">
+        </div>
+
+        <div class="modal-actions">
+          <button id="saveSettingsBtn" class="primary-btn">
+            <i class="fa-solid fa-check"></i> Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
